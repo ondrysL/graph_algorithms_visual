@@ -1,0 +1,110 @@
+:root {
+    --white: #FFF5E1;
+    --pink: #FF6969;
+    --red: #C80036;
+    --blue: #0C1844
+}
+
+body {
+    font-family: Poppins;
+    background-color: var(--white);
+}
+
+.main_layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    row-gap: 15px;
+}
+
+.main_header {
+    color: var(--blue)
+}
+
+.main_modes_layout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 40px;
+}
+
+.main_mode_item {
+    list-style: none;
+}
+
+.main_mode_item {
+    min-width: 100px;
+    min-height: 40px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    color: var(--white);
+    font-weight: 600;
+    border: none;
+    background-color: var(--pink);
+    transition: all 1s ease-in-out;
+}
+
+.main_mode_item:hover {
+    background-color: var(--red);
+    transition: all 1s ease-in-out;
+}
+
+.visual_solve_button {
+    min-width: 100px;
+    min-height: 40px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    color: var(--white);
+    font-weight: 600;
+    border: none;
+    background-color: var(--pink);
+    transition: all 1s ease-in-out;
+}
+
+.visual_solve_button:hover {
+    background-color: var(--red);
+    transition: all 1s ease-in-out;
+}
+
+.visual_layout {
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    align-items: center;
+    row-gap: 20px;
+}
+
+.visual_main {
+    display: grid;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(20, 1fr);
+}
+
+.tile {
+    background-color: white;
+    width: 30px;
+    height: 30px;
+    border: solid var(--blue) 1px;
+}
+
+.tile:hover {
+    background-color: var(--blue);
+}
+
+.visual_solve_box {
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    align-items: center;
+    row-gap: 20px;
+}
+
+.visual_inputs input {
+    min-height: 20px;
+    width: 100px;
+}
+
+.selected {
+    background-color: var(--blue);
+}

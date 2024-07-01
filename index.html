@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+		<title>Algo</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="./index.css">
+</head>
+	<body>
+		<div class="main_layout">
+		    <h1 class="main_header">Graph algo visualization</h1>
+		    <div class="main_modes_layout">
+				<button class="main_mode_item">BFS</button>
+				<button class="main_mode_item">DFS</button>
+		     </div>
+		     <div class="visual_layout">
+		          <div class="visual_main">
+
+				  </div>
+                  <div class="visual_solve_box">
+                    <div class="visual_inputs">
+                        <input type="number" id="x_size">
+                        <input type="number" id="y_size">
+                    </div>
+				    <div class="visual_buttons">
+						<button class="visual_solve_button" id="solve_button">Solve!</button>
+						<button class="visual_solve_button" id="reset_button">Reset</button>
+				    </div>
+                  </div>
+		     </div>
+		</div>
+		<script type="module" src="./js/index.js"></script>
+    </body>
+</html>
