@@ -88,10 +88,6 @@ body {
     border: solid var(--blue) 1px;
 }
 
-.tile:hover {
-    background-color: var(--blue);
-}
-
 .visual_solve_box {
     display: flex;
     flex-direction: column;
@@ -107,4 +103,8 @@ body {
 
 .selected {
     background-color: var(--blue);
+}
+
+.selected_entry {
+    background-color: var(--pink);
 }
