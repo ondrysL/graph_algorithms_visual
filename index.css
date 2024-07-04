@@ -86,6 +86,7 @@ body {
     width: 30px;
     height: 30px;
     border: solid var(--blue) 1px;
+    transition: none
 }
 
 .visual_solve_box {
@@ -107,4 +108,22 @@ body {
 
 .selected_entry {
     background-color: var(--pink);
+}
+
+.main_visual_box {
+    display: flex;
+    justify-items: center;
+    align-items: center;
+}
+
+.visual_control {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.switch_text {
+    color: var(--blue);
+    font-size: 15px;
+    font-weight: 600;
 }

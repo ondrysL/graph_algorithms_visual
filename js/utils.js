@@ -6,6 +6,18 @@ const enumTileType = {
   Empty: 2,
 };
 
+class Entry {
+  positionRow;
+  positionCol;
+  dir;
+
+  constructor(row, col, dir) {
+    this.positionRow = row;
+    this.positionCol = col;
+    this.dir = dir;
+  }
+}
+
 class Tile {
   #positionCol;
   #positionRow;
@@ -13,6 +25,7 @@ class Tile {
   #type;
   #visited;
   #isBorder;
+  #pred;
 
   constructor(row, col) {
     this.#positionCol = col;
@@ -20,13 +33,14 @@ class Tile {
     this.#visited = false;
     this.#isBorder = false;
     this.#type = enumTileType["Empty"];
+    this.#pred = null;
     this.#htmlElement = document.createElement("div");
     this.#htmlElement.className = "tile";
     this.#htmlElement.id = `tile_${col}_${row}`;
   }
 
   setEventListeners(maze) {
-    this.#htmlElement.addEventListener("mousedown", () => {
+    this.htmlElement.addEventListener("mousedown", () => {
       let css_style;
       let type;
 
@@ -44,12 +58,18 @@ class Tile {
       // maze.printList();
     });
 
-    this.#htmlElement.addEventListener("mouseover", () => {
+    this.htmlElement.addEventListener("mouseover", () => {
       if (maze.isMouseDown) {
-        this.#htmlElement.classList.add("selected");
+        this.#htmlElement.style.backgroundColor = "#0C1844";
         maze.setTile(this.#positionRow, this.#positionCol, 0);
         // maze.printList();
       }
+    });
+
+    this.#htmlElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      this.#htmlElement.style.backgroundColor = "white";
+      maze.setTile(this.#positionRow, this.#positionCol, 2);
     });
   }
 
@@ -88,6 +108,14 @@ class Tile {
   get isBorder() {
     return this.#isBorder;
   }
+
+  get pred() {
+    return this.#pred;
+  }
+
+  set pred(value) {
+    this.#pred = value;
+  }
 }
 
 class Maze {
@@ -97,12 +125,17 @@ class Maze {
   #isMouseDown;
   #isShiftDown;
   #entryCount;
+  #entry;
+  selectedOption;
 
   constructor(row, col) {
     this.#col = col;
     this.#row = row;
     this.#entryCount = 0;
     this.#listOfEl = [];
+    this.#entry = null;
+    this.#isShiftDown = false;
+    this.selectedOption = "border";
   }
 
   createMaze(elementToAppend) {
@@ -138,7 +171,6 @@ class Maze {
       this.#listOfEl.push(row);
     }
 
-    // console.log(this.#listOfEl);
     elementToAppend.style.gridTemplateColumns = `repeat(${this.#col}, 1fr)`;
     elementToAppend.style.gridTemplateRows = `repeat(${this.#row}, 1fr)`;
   }
@@ -188,29 +220,65 @@ class Maze {
     }
   }
 
+  #checkEntry(neigh) {
+    let count = 0;
+
+    for (let i = 0; i < neigh.length; i++) {
+      let item = neigh[i];
+      if (item != null && item.type == enumTileType["Border"]) {
+        let opossiteDir = (i + 2) % 4;
+
+        if (
+          neigh[opossiteDir] == null ||
+          neigh[opossiteDir].type != enumTileType["Border"]
+        ) {
+          return false;
+        }
+
+        break;
+      }
+    }
+
+    for (let i = 0; i < neigh.length; i++) {
+      let item = neigh[i];
+
+      if (item != null && item.type == enumTileType["Border"]) {
+        count++;
+      }
+    }
+
+    return count == 2;
+  }
+
   #traversalMaze(firstRow, firstCol, row, col, actDir, tiles) {
-    if (this.#listOfEl[row][col].visited && this.#listOfEl[row][col].isBorder) {
+    if (this.#listOfEl[row][col].visited) {
       return false;
     }
 
     this.#listOfEl[row][col].visited = true;
     this.#listOfEl[row][col].isBorder = true;
     this.#listOfEl[row][col].isInside = true;
-    this.#listOfEl[row][col].htmlElement.style.backgroundColor = "red";
+    const neighbours = this.#getNeighbours(row, col);
+
+    if (this.#listOfEl[row][col].type == enumTileType["Entry"]) {
+      if (!this.#checkEntry(neighbours)) {
+        console.log("bad entry");
+        return false;
+      }
+
+      if (this.#entry == null) {
+        this.#entry = new Entry(row, col, actDir);
+      }
+
+      this.#entryCount += 1;
+    }
 
     if (firstRow + 1 == row && firstCol == col) {
       return this.#entryCount == 2;
     }
 
     let [inRow, inCol] = this.#changeDir(row, col, (actDir + 1) % 4);
-    console.log("act:", row, col, "new: ", inRow, inCol);
     tiles.enqueue(this.getTile(inRow, inCol));
-
-    if (this.#listOfEl[row][col].type == enumTileType["Entry"]) {
-      this.#entryCount += 1;
-    }
-
-    const neighbours = this.#getNeighbours(row, col);
 
     // if is possible turn left
     let newDir = actDir == 0 ? 3 : actDir - 1;
@@ -233,7 +301,7 @@ class Maze {
       newDir = (newDir + 1) % 4;
 
       if (newDir == actDir) {
-        return false;
+        break;
       }
     }
 
@@ -267,7 +335,6 @@ class Maze {
         if (item != null && !item.visited && !item.isBorder) {
           item.visited = true;
           item.isInside = true;
-          console.log(item);
           tiles.enqueue(item);
         }
       });
@@ -280,9 +347,10 @@ class Maze {
         const tile = this.getTile(i, j);
 
         if (tile.type != enumTileType["Empty"] && !tile.isInside) {
-          console.log(i, j);
           return false;
         }
+
+        tile.visited = false;
       }
     }
 
@@ -295,7 +363,7 @@ class Maze {
     const tiles = new Queue();
 
     if (neigh[1] == null) {
-      alert("bad border");
+      alert("bad border 1");
       return false;
     }
 
@@ -309,11 +377,10 @@ class Maze {
     );
 
     if (!isBorderCorrect) {
-      alert("bad border");
+      alert("bad border 2");
       return false;
     }
 
-    tiles.printAllObject();
     this.#fillMaze(tiles);
 
     let checkFullBoard = this.#checkFullBoard();
@@ -322,9 +389,116 @@ class Maze {
       alert("bad outer");
       return false;
     }
+
+    return true;
   }
 
-  solveBFS() {}
+  solveBFS() {
+    const queue = new Queue();
+    const [firstTileRow, firstTileCol] = this.#changeDir(
+      this.entry.positionRow,
+      this.entry.positionCol,
+      (this.entry.dir + 1) % 4,
+    );
+    this.#listOfEl[this.entry.positionRow][this.entry.positionCol].visited =
+      true;
+    const firstTile = this.getTile(firstTileRow, firstTileCol);
+    firstTile.pred = this.getTile(
+      this.entry.positionRow,
+      this.entry.positionCol,
+    );
+    firstTile.visited = true;
+    let lastTile = null;
+    let time = 1;
+
+    queue.enqueue(firstTile);
+
+    while (queue.count != 0) {
+      const tile = queue.dequeue();
+
+      if (tile.type == enumTileType["Entry"]) {
+        lastTile = tile;
+        return [lastTile, time];
+      }
+
+      const neigh = [
+        this.getTile(tile.positionRow - 1, tile.positionCol),
+        this.getTile(tile.positionRow, tile.positionCol + 1),
+        this.getTile(tile.positionRow + 1, tile.positionCol),
+        this.getTile(tile.positionRow, tile.positionCol - 1),
+      ];
+
+      for (let i = 0; i < neigh.length; i++) {
+        const item = neigh[i];
+
+        if (
+          item == null ||
+          item.visited ||
+          item.border ||
+          item.type == enumTileType["Border"]
+        ) {
+          continue;
+        }
+
+        neigh[i].pred = tile;
+
+        (function (item) {
+          setTimeout(() => {
+            item.htmlElement.style.backgroundColor = "#C80036";
+          }, time * 10);
+
+          setTimeout(() => {
+            item.htmlElement.style.backgroundColor = "white";
+          }, time * 30);
+        })(item);
+
+        time++;
+        item.visited = true;
+        queue.enqueue(item);
+      }
+    }
+
+    // this is ugly, I know
+    return [null, null];
+  }
+
+  drawPath(tile, time) {
+    while (tile != null) {
+      (function (tile) {
+        setTimeout(() => {
+          tile.htmlElement.style.backgroundColor = "#FF6969";
+        }, time * 30);
+      })(tile);
+
+      time++;
+      tile = tile.pred;
+    }
+    return;
+  }
+
+  addTranstitions() {
+    for (let i = 0; i < this.#row; i++) {
+      for (let j = 0; j < this.#col; j++) {
+        this.#listOfEl[i][j].htmlElement.style.transition = "all 0.6s";
+      }
+    }
+  }
+  reset() {
+    this.#entry = null;
+    this.#entryCount = 0;
+
+    for (let i = 0; i < this.#row; i++) {
+      for (let j = 0; j < this.#col; j++) {
+        let tile = this.#listOfEl[i][j];
+        tile.isInside = false;
+        tile.visited = false;
+        tile.pred = null;
+        if (tile.type == enumTileType["Empty"]) {
+          tile.htmlElement.style.background = "white";
+        }
+      }
+    }
+  }
 
   printList() {
     console.log(this.#listOfEl);
@@ -360,6 +534,14 @@ class Maze {
 
   get isShiftDown() {
     return this.#isShiftDown;
+  }
+
+  get entry() {
+    return this.#entry;
+  }
+
+  set entry(entry) {
+    this.#entry = entry;
   }
 }
 
