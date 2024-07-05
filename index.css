@@ -19,7 +19,14 @@ body {
 }
 
 .main_header {
-    color: var(--blue)
+    margin-bottom: 0px;
+    color: var(--blue);
+}
+
+.mode_header {
+    color: var(--blue);
+    margin: 0px;
+    font-weight: 600;
 }
 
 .main_modes_layout {
@@ -114,6 +121,7 @@ body {
     display: flex;
     justify-items: center;
     align-items: center;
+    column-gap: 20px;
 }
 
 .visual_control {

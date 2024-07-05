@@ -4,6 +4,7 @@ const enumTileType = {
   Border: 0,
   Entry: 1,
   Empty: 2,
+  Point: 3,
 };
 
 class Entry {
@@ -40,19 +41,26 @@ class Tile {
   }
 
   setEventListeners(maze) {
-    this.htmlElement.addEventListener("mousedown", () => {
-      let css_style;
-      let type;
+    let css_style;
+    let type;
 
-      if (maze.isShiftDown) {
-        css_style = "#FF6969";
-        type = enumTileType["Entry"];
-      } else {
-        maze.isMouseDown = true;
-        css_style = "#0C1844";
+    switch (maze.selectedOption) {
+      case "border":
         type = enumTileType["Border"];
-      }
+        css_style = "#0C1844";
+        break;
+      case "entry":
+        type = enumTileType["Entry"];
+        css_style = "#FF6969";
+        break;
+      case "point":
+        type = enumTileType["Point"];
+        css_style = "yellow";
+        break;
+    }
 
+    this.htmlElement.addEventListener("mousedown", () => {
+      maze.isMouseDown = true;
       this.#htmlElement.style.backgroundColor = css_style;
       maze.setTile(this.#positionRow, this.#positionCol, type);
       // maze.printList();
@@ -60,8 +68,8 @@ class Tile {
 
     this.htmlElement.addEventListener("mouseover", () => {
       if (maze.isMouseDown) {
-        this.#htmlElement.style.backgroundColor = "#0C1844";
-        maze.setTile(this.#positionRow, this.#positionCol, 0);
+        this.#htmlElement.style.backgroundColor = css_style;
+        maze.setTile(this.#positionRow, this.#positionCol, type);
         // maze.printList();
       }
     });
@@ -69,7 +77,7 @@ class Tile {
     this.#htmlElement.addEventListener("contextmenu", (event) => {
       event.preventDefault();
       this.#htmlElement.style.backgroundColor = "white";
-      maze.setTile(this.#positionRow, this.#positionCol, 2);
+      maze.setTile(this.#positionRow, this.#positionCol, enumTileType["Empty"]);
     });
   }
 
@@ -123,9 +131,9 @@ class Maze {
   #row;
   #listOfEl;
   #isMouseDown;
-  #isShiftDown;
   #entryCount;
   #entry;
+  #mode;
   selectedOption;
 
   constructor(row, col) {
@@ -134,7 +142,6 @@ class Maze {
     this.#entryCount = 0;
     this.#listOfEl = [];
     this.#entry = null;
-    this.#isShiftDown = false;
     this.selectedOption = "border";
   }
 
@@ -144,18 +151,6 @@ class Maze {
 
     document.addEventListener("mouseup", () => {
       this.#isMouseDown = false;
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key == "Shift") {
-        this.#isShiftDown = true;
-      }
-    });
-
-    document.addEventListener("keyup", (e) => {
-      if (e.key == "Shift") {
-        this.#isShiftDown = false;
-      }
     });
 
     for (let i = 0; i < this.#row; i++) {
@@ -173,6 +168,14 @@ class Maze {
 
     elementToAppend.style.gridTemplateColumns = `repeat(${this.#col}, 1fr)`;
     elementToAppend.style.gridTemplateRows = `repeat(${this.#row}, 1fr)`;
+  }
+
+  updateTileEventListeners() {
+    this.#listOfEl.forEach((row) => {
+      row.forEach((tile) => {
+        tile.setEventListeners(this);
+      });
+    });
   }
 
   #findFirstBorder() {
@@ -462,6 +465,82 @@ class Maze {
     return [null, null];
   }
 
+  solveDFSRec(tile, points, time) {
+    const neigh = [
+      this.getTile(tile.positionRow - 1, tile.positionCol),
+      this.getTile(tile.positionRow, tile.positionCol + 1),
+      this.getTile(tile.positionRow + 1, tile.positionCol),
+      this.getTile(tile.positionRow, tile.positionCol - 1),
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      let tile = neigh[i];
+
+      if (
+        (tile.type == enumTileType["Empty"] ||
+          tile.type == enumTileType["Point"]) &&
+        !tile.visited
+      ) {
+        tile.visited = true;
+
+        if (tile.type == enumTileType["Point"]) {
+          points++;
+        }
+
+        (function (item) {
+          let color;
+
+          setTimeout(() => {
+            item.htmlElement.style.backgroundColor = "#C80036";
+          }, time * 15);
+
+          if (item.type == enumTileType["Point"]) {
+            color = "lightgreen";
+          } else {
+            color = "white";
+          }
+
+          setTimeout(() => {
+            item.htmlElement.style.backgroundColor = color;
+          }, time * 30);
+        })(tile);
+
+        time++;
+
+        [points, time] = this.solveDFSRec(tile, points, time);
+      }
+    }
+
+    return [points, time];
+  }
+
+  solveDFS() {
+    console.log(this.entry);
+
+    const [firstTileRow, firstTileCol] = this.#changeDir(
+      this.entry.positionRow,
+      this.entry.positionCol,
+      (this.entry.dir + 1) % 4,
+    );
+    this.#listOfEl[this.entry.positionRow][this.entry.positionCol].visited =
+      true;
+    const firstTile = this.getTile(firstTileRow, firstTileCol);
+    firstTile.pred = this.getTile(
+      this.entry.positionRow,
+      this.entry.positionCol,
+    );
+    firstTile.visited = true;
+    let pointCount = 0;
+
+    if (firstTile.type == enumTileType["Point"]) {
+      pointCount++;
+    }
+
+    let [points, time] = this.solveDFSRec(firstTile, pointCount, 1);
+
+    return [points, time];
+  }
+
   drawPath(tile, time) {
     while (tile != null) {
       (function (tile) {
@@ -516,6 +595,14 @@ class Maze {
     return this.#listOfEl[row][col];
   }
 
+  get mode() {
+    return this.#mode;
+  }
+
+  set mode(mode) {
+    this.#mode = mode;
+  }
+
   set col(col) {
     this.#col = col;
   }
@@ -532,16 +619,16 @@ class Maze {
     return this.#isMouseDown;
   }
 
-  get isShiftDown() {
-    return this.#isShiftDown;
-  }
-
   get entry() {
     return this.#entry;
   }
 
   set entry(entry) {
     this.#entry = entry;
+  }
+
+  get listOfEl() {
+    return this.#listOfEl;
   }
 }
 

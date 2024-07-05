@@ -9,10 +9,10 @@
 </head>
 	<body>
 		<div class="main_layout">
-		    <h1 class="main_header">Graph algo visualization</h1>
+			<h1 class="main_header">Graph algo visualization</h1>
 		    <div class="main_modes_layout">
-				<button class="main_mode_item">BFS</button>
-				<button class="main_mode_item">DFS</button>
+				<button class="main_mode_item" id="bfs_btn">BFS</button>
+				<button class="main_mode_item" id="dfs_btn">DFS</button>
 		     </div>
 		     <div class="visual_layout">
 				   <div class="main_visual_box">
@@ -26,12 +26,13 @@
 								<input type="checkbox" name="control_checkbox" value="entry" id="entry_input">
 								<span class="switch_text">Entry</span>
 						    </label>
-						    <label  class="switch">
-								<input type="checkbox" name="control_checkbox" value="point" id="point_input">
+						    <label  class="switch" id="point_input" style="opacity: 0">
+								<input type="checkbox" name="control_checkbox" value="point">
 								<span class="switch_text">Point</span>
 						    </label>
 						</div>
 				   </div>
+				<p class="mode_header" id="mode_text">Mode: Shortest Path</p>
                   <div class="visual_solve_box">
                     <div class="visual_inputs">
                         <input type="number" id="x_size">
